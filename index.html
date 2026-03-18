@@ -1,47 +1,27 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <title>マイクラサーバーステータス</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; background: #222; color: #fff; }
-        .status-box { border: 1px solid #555; padding: 20px; border-radius: 10px; display: inline-block; margin-top: 50px; }
-        .online { color: #00ff00; }
-        .offline { color: #ff4444; }
-    </style>
-</head>
-<body>
+const serverIP = 'node1.swdhst.com:2074'; // ポートも入れるのが確実
 
-    <div class="status-box">
-        <h2>サーバー状況</h2>
-        <p id="ip-address">Loading...</p>
-        <p id="status">確認中...</p>
-        <p id="players">人数: --/--</p>
-    </div>
+async function updateStatus() {
+    try {
+        // プロキシに強い api.mcsrvstat.us を使用
+        const response = await fetch(`https://api.mcsrvstat.us{serverIP}`);
+        const data = await response.json();
 
-    <script>
-        const serverIP = 'sutoserver.xgames.jp'; // ここを書き換える
-
-        async function updateStatus() {
-            try {
-                const response = await fetch(`https://api.mcstatus.io{serverIP}`);
-                const data = await response.json();
-
-                document.getElementById('ip-address').innerText = serverIP;
-                if (data.online) {
-                    document.getElementById('status').innerText = "● オンライン";
-                    document.getElementById('status').className = "online";
-                    document.getElementById('players').innerText = `人数: ${data.players.online} / ${data.players.max}`;
-                } else {
-                    document.getElementById('status').innerText = "● オフライン";
-                    document.getElementById('status').className = "offline";
-                }
-            } catch (e) {
-                document.getElementById('status').innerText = "エラーが発生しました";
-            }
+        if (data.online === true) {
+            document.getElementById('status').innerText = "● 稼働中";
+            document.getElementById('status').className = "online";
+            // プロキシ経由の人数を表示
+            document.getElementById('players').innerText = `接続人数: ${data.players.online} / ${data.players.max}`;
+            
+            // もしMOTD（サーバーの説明文）も出したければ
+            // document.body.innerHTML += `<p>${data.motd.clean[0]}</p>`;
+        } else {
+            document.getElementById('status').innerText = "● サーバーに接続できません";
+            document.getElementById('status').className = "offline";
         }
+    } catch (e) {
+        console.error("エラー詳細:", e);
+        document.getElementById('status').innerText = "通信エラーが発生しました";
+    }
+}
 
-        updateStatus();
-    </script>
-</body>
-</html>
+updateStatus();
